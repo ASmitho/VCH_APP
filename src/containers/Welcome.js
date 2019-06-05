@@ -3,7 +3,7 @@ import logo from "../media/psych_logo.jpg"
 import './Welcome.css';
 import { Redirect } from "react-router-dom";
 import { QuestCreate, QuestRecompute, QuestTrials, QuestUpdate, QuestStimulate, QuestMean, QuestMode, QuestSd, QuestP, QuestPdf, QuestQuantile, PAL_Gumbel, cumsum } from "../Quest.js"
-import { ch_QuestBetaAnalysis } from "../VisualQuest.js"
+import { ch_QuestBetaAnalysis, test } from "../VisualQuest.js"
 
 import { connect } from 'react-redux'
 import { add_array, add_response_1 } from '../actions/data'
@@ -36,28 +36,8 @@ class Welcome extends Component {
   }
 
   render() {
-
-    // var tGuess = 0.5,
-    //   tGuessSd = 0.1,
-    //   pThreshold = 0.75,
-    //   beta = 3.5,
-    //   delta = 0.01,
-    //   gamma = 0.01,
-    //   grain = 0.001,
-    //   dim = 1000,
-    //   range = 20;
-    // var q = QuestCreate(tGuess, tGuessSd, pThreshold, beta, delta, gamma, grain, range);
-
-    // console.log(q.pdf); 
-    // var q2 = QuestCreate(tGuess, tGuessSd, pThreshold, beta, delta, gamma, grain, range);
-    // q2.updatePdf = 1; 
-    // q2 = QuestUpdate(q2, 0.5, 1);
-    // console.log(q2);
-
-    // console.log( QuestQuantile(q), QuestQuantile(q2)); 
-    // console.log(this.props.data);
-
     
+    //test();
 
     if(this.state.continue === true){
       return <Redirect to="/Instructions" />

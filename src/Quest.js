@@ -37,6 +37,7 @@ export function makeQ( tGuess, tGuessSd, pThreshold, beta, delta, gamma, grain, 
     return newQ; 
 }
 
+
 export function QuestCreate( tGuess, tGuessSd, pThreshold, beta, delta, gamma, grain, range, plotIt ){
 
     let nargin = arguments.length;
@@ -131,8 +132,8 @@ export function QuestRecompute( q, plotIt ) {
 
     q.p2 = tempA.map( function( x ) { 
         // results are slightly off from the ten thousands place increasing to the hundreths place by .01 at times;
-        return ( math.eval( q.delta + "*" + q.gamma + "+(1-" + q.delta + ")*(1-(1-" + q.gamma +")*" + "e^(-10 ^ " + x + "))"));
-    }); 
+        return ( math.eval( q.delta + "*" + q.gamma + "+ ( 1 -" + q.delta + " ) * ( 1 - ( 1-" + q.gamma +") *" + "e^(-10 ^ " + x + "))"));
+    });  
 
     if( plotIt > 0 ){
         //Plot the data via package *******************************
@@ -143,9 +144,7 @@ export function QuestRecompute( q, plotIt ) {
     }
 
     var linear = require('everpolate').linear;
-        //NEED TO FIX
-    q.xThreshold= linear( q.pThreshold , q.x2, q.p2);
-
+    q.xThreshold= linear( q.pThreshold , q.p2, q.x2);
     
     for(var i = 0; i < q.p2.length; i++){
         if(!isFinite(q.p2[i])){
@@ -153,7 +152,10 @@ export function QuestRecompute( q, plotIt ) {
         }
     }
 
-    //Add check for strictly monotonic ************************
+    q.p2 = q.x2.map( function ( x ){
+        return( math.eval( q.delta + "*" + q.gamma + "+ ( 1 -" + q.delta + " ) * ( 1 - ( 1-" + q.gamma +") *" + "e^(-10 ^ (" + q.beta + "* (" + x + "+" + q.xThreshold + "))))")); 
+    } );
+
 
     let tempC = q.p2.slice(); 
     tempC = tempC.reverse(); 
@@ -163,7 +165,7 @@ export function QuestRecompute( q, plotIt ) {
     q.s2[0] = array1; 
     q.s2[1] = array2; 
 
-    if( q.intensity == undefined || q.response == undefined ){
+    if( q.intensity.length == 0 || q.response.length  == 0 ){
         let arrayZero = new Array(10000).fill(0); 
         q.trialCount = 0;
         q.intensity = arrayZero;
@@ -209,7 +211,7 @@ export function QuestRecompute( q, plotIt ) {
             q.pdf[i] = q.pdf[i] * h2[i];
         }
 
-		if( q.normalizePdf == 0 && k % 100 == 0){
+		if( q.normalizePdf && k % 100 == 0){
             let sumPDF = sumVector(q.pdf); 
             q.pdf = q.pdf.map( function( x ) { return x / sumPDF; }); //avoid underflow; keep the pdf normalized // 3 ms
         }
@@ -269,9 +271,10 @@ export function QuestUpdate( q, intensity, response ) {
                 ii = ii.map( function( x ) { return (x + q.s2[0].length - ii[ ii.length - 1]) ; }); 
             }
         }
+        
 
         for(let i = 0; i < ii.length; i++){
-            q.pdf[i] = q.pdf[i] * q.s2[response][ii[i]];
+            q.pdf[i] = q.pdf[i] * q.s2[response][ii[i] - 1];
         }
 
         if( q.normalizePdf ){
@@ -434,12 +437,11 @@ export function QuestSd( q ){
         throw new Error('Usage: sd=QuestSd(q)');
     }
     let p = sumVector( q.pdf );
+    
     var xSquared = q.x.map(function(x){return Math.pow(x, 2); }); 
     var Squared2 = sumVector( multiplyVector(q.pdf, q.x)) / p; ;
 
-    
-    var sd= Math.sqrt( sumVector(multiplyVector(q.pdf, xSquared)) / (p - Math.pow(Squared2, 2)));
-
+    var sd= Math.sqrt( (sumVector(multiplyVector(q.pdf, xSquared)) / p) - Math.pow(Squared2, 2)) ; 
     return sd; 
 }
 //p=QuestPdf(q,t)

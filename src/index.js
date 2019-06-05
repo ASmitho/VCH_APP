@@ -7,7 +7,6 @@ import { BrowserRouter as Router } from "react-router-dom";
 import { createStore, combineReducers } from 'redux'
 import { Provider } from 'react-redux'
 import configureStore, { history } from './configureStore'
-import createHistory from 'history/createBrowserHistory';
 
 
 const store = configureStore( { history } );

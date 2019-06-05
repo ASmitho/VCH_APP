@@ -1,6 +1,40 @@
-import { QuestCreate, QuestMean, QuestSd, QuestQuantile } from "./Quest.js"
+import { QuestCreate, QuestMean, QuestSd, QuestQuantile, QuestUpdate } from "./Quest.js"
 
-export function vis_quest( currentNoise, trialsDesired, tGuess_1, tGuessSd_1, tGuess_2, tGuessSd_2, pThreshold, beta, delta, gamma ){
+export function test(){
+    const math = require('mathjs');
+
+    var tGuess = 0.5,
+      tGuessSd = 0.1,
+      pThreshold = 0.75,
+      beta = 3.5,
+      delta = 0.01,
+      gamma = 0.01,
+      grain = 0.001,
+      range = .05;
+    var q1 = QuestCreate(tGuess, tGuessSd, pThreshold, beta, delta, gamma, grain, range);
+
+    //console.log(q1); 
+    var q2 = QuestCreate(tGuess, tGuessSd, pThreshold, beta, delta, gamma, grain, range);
+    q2.updatePdf = 1; 
+    q2 = QuestUpdate(q2, 0.5, 1);
+    console.log(q2)
+    var t1 = QuestMean(q1);		// Recommended by Pelli (1989) and King-Smith et al. (1994) as the best way to ascertain threshold.
+    var sd1 = QuestSd(q2);
+
+    var t2 = QuestMean(q2);		// Recommended by Pelli (1989) and King-Smith et al. (1994) as the best way to ascertain threshold.
+    var sd2 = QuestSd(q2);
+
+    // Take the arithmetic mean of these two threshold (75%) estimates.
+    var tmean = math.mean([t1, t2]);
+    var sdmean = math.mean([sd1, sd2]);
+    
+    console.log(t1, sd1, t2, sd2, tmean, sdmean);
+
+    var intensities = gumbel_intensities(q1, q2, tmean);
+    return intensities; 
+}
+
+export function vis_quest( trialsDesired, tGuess_1, tGuessSd_1, tGuess_2, tGuessSd_2, pThreshold, beta, delta, gamma ){
 
     var q1= QuestCreate(tGuess_1, tGuessSd_1, pThreshold, beta, delta, gamma);
     q1.normalizePdf = 1;
@@ -15,13 +49,12 @@ export function vis_quest( currentNoise, trialsDesired, tGuess_1, tGuessSd_1, tG
     var frame = 0; 
     var log_contrast_1;
     var log_contrast_2;
+    var currentQ = 0; 
 
     console.log(q1); 
 
     while(k < (trialsDesired * 2)){
-        frame += 1; 
-        var nowTime = new Date().getTime() / 1000;      
-        var currentQ = 0; 
+        var nowTime = new Date().getTime() / 1000;     
 
         
         k += 1; 
@@ -37,7 +70,7 @@ export function vis_quest( currentNoise, trialsDesired, tGuess_1, tGuessSd_1, tG
         if( currentQ == 1 ){
             
             if(k == 1){
-                log_contrast_1 = tGuess_1+0.3;  //  Make this procedure go from high to low contrast.
+                log_contrast_1 = tGuess_1 + 0.3;  //  Make this procedure go from high to low contrast.
             }
             // if(k != 1){
             //     if !isNaN(trialdata_1{q_1_trialnum-1,2})  // Repeat last level if pt did not have recorded response.
@@ -57,7 +90,6 @@ export function vis_quest( currentNoise, trialsDesired, tGuess_1, tGuessSd_1, tG
                 }
             }
         }
-                
                 
     }
 
@@ -95,7 +127,7 @@ export function vis_quest( currentNoise, trialsDesired, tGuess_1, tGuessSd_1, tG
 export function gumbel_intensities( q1, q2, tmean ){
     
     var intensities = [25, 50, 75, 90];
-
+    return intensities; 
 
 }
 
@@ -106,6 +138,7 @@ export function ch_QuestBetaAnalysis( q ){
     const math = require('mathjs');
 
     var q2 =  QuestCreate( q.tGuess, q.tGuessSd, q.pThreshold, math.eval("2^(1/4)"), q.delta, q.gamma, 0.02);
+
     q2.dim = 250; 
     //var qq = QuestRecompute( q2 ); 
 
@@ -128,6 +161,4 @@ export function ch_QuestBetaAnalysis( q ){
     // betaMean = betaMean / p;
 
     //var temp1 = p2.map(function(x) { return (math.pow( (x * beta2), 2) ) } );
-
-
 }

@@ -13,6 +13,7 @@ class TrialQ extends Component {
     super(props);
     this.keyFunction = this.keyFunction.bind(this);
     this.create_noise = this.create_noise.bind(this);
+    this.process_data = this.process_data.bind(this);
     this.state = {
       continue: false,
       counter: 0,
@@ -43,7 +44,27 @@ class TrialQ extends Component {
     this.audioContext = new AudioContext();
   }
 
-  create_noise(audioContext, callback) {
+  process_data( q1, q2 ) {
+    const math = require('mathjs');
+
+    //Statistics
+    var t1 = QuestMean(q1);		// Recommended by Pelli (1989) and King-Smith et al. (1994) as the best way to ascertain threshold.
+    var sd1 = QuestSd(q1);
+
+    var t2 = QuestMean(q2);		// Recommended by Pelli (1989) and King-Smith et al. (1994) as the best way to ascertain threshold.
+    var sd2 = QuestSd(q2);
+
+    // Take the arithmetic mean of these two threshold (75%) estimates.
+    var tmean = math.mean([t1, t2]);
+    var sdmean = math.mean([sd1, sd2]);
+
+    var lambda = 0; // normally in config file//////////////////////
+    var gamma = 0.01; // normally in config file//////////////////////
+
+
+  }
+
+  create_noise(audioContext) {
 
     var end = 80;
     // var contrast_block = tt1;
@@ -90,7 +111,7 @@ class TrialQ extends Component {
     var that = this;
     var seconds = 0;
 
-    async function generate_noise() {
+    async function vis_quest() {
 
       if (t == start_time + jitter) {
 
@@ -99,7 +120,7 @@ class TrialQ extends Component {
 
         total = index1 + index2;
 
-        console.log(QuestQuantile(q_1), QuestQuantile(q_2)); 
+        console.log(QuestQuantile(q_1), QuestQuantile(q_2));
 
         // determining which staircase to use
         if (index1 == index2) {
@@ -256,7 +277,7 @@ class TrialQ extends Component {
           }
         }
       }
-      
+
       t++;
       ctx.putImageData(imgdata, 0, 0);
 
@@ -281,7 +302,7 @@ class TrialQ extends Component {
       }
 
       if (total < end) {
-        intervalId = window.requestAnimationFrame(generate_noise);
+        intervalId = window.requestAnimationFrame(vis_quest);
 
         //console.log(that.state.contrast_array_1, that.state.responses_1);
 
@@ -300,7 +321,7 @@ class TrialQ extends Component {
 
     }
 
-    generate_noise.call(that);
+    vis_quest.call(that);
 
   }
 
@@ -367,13 +388,13 @@ class TrialQ extends Component {
 
 
     if ((event.keyCode === 49 || event.keyCode === 50 || event.keyCode === 51 || event.keyCode === 52 || event.keyCode === 53) && this.state.time_window_rating == true) {
-      if(this.state.currentQ == 1){
+      if (this.state.currentQ == 1) {
         this.setState({
           ratings_1: this.state.ratings_1.concat([event.keyCode - 48]),
           time_window_rating: false,
         });
       }
-      else{
+      else {
         this.setState({
           ratings_2: this.state.ratings_2.concat([event.keyCode - 48]),
           time_window_rating: false,
