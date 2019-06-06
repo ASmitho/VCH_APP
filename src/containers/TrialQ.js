@@ -14,6 +14,7 @@ class TrialQ extends Component {
     this.keyFunction = this.keyFunction.bind(this);
     this.create_noise = this.create_noise.bind(this);
     this.process_data = this.process_data.bind(this);
+    this.gumbel_intensities = this.gumbel_intensities.bind(this);
     this.state = {
       continue: false,
       counter: 0,
@@ -61,6 +62,26 @@ class TrialQ extends Component {
     var lambda = 0; // normally in config file//////////////////////
     var gamma = 0.01; // normally in config file//////////////////////
 
+    var intensities = this.gumbel_intensities(q1, q2, tmean, lambda, gamma);
+
+    return intensities; 
+  }
+
+  gumbel_intensities(q1, q2, tmean, lambda, gamma){
+
+    var intensities = []
+    intensities.push( [ 25, 50, 75, 90 ] );
+
+    console.log(intensities);
+    const math = require('mathjs');
+
+    //parameters(1,:) = ch_QuestBetaAnalysis(q_1);
+    //parameters(2,:) = ch_QuestBetaAnalysis(q_2);
+
+    var mean_beta = 3.5;  // changed 3/25/2019. Trying fixed beta at 3.5 (suggested generic beta value by Quest documentation) instead of individually estimating.
+    var mean_alpha = tmean;
+    var estimate_beta = math.mean(q1.beta, q2.beta);
+    var beta = estimate_beta;
 
   }
 

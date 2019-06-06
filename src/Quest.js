@@ -562,11 +562,11 @@ export function PAL_Gumbel(alpha, beta, gamma, lambda, x, varargin){
 
     const math = require('mathjs');
 
-    if ( arguments.length != 6){
+    if ( arguments.length < 5 || arguments.length > 6){
         throw new Error("Incorrect number of parameters: alpha, beta, gamma, lambda, x, varargin");
     }
 
-    if(  varargin !== "" ){
+    if(  varargin ){
         if( varargin === 'Inverse' ){
             if ( isArray(x)){
                 var y = x.map(function(t){

@@ -1,4 +1,4 @@
-import { QuestCreate, QuestMean, QuestSd, QuestQuantile, QuestUpdate } from "./Quest.js"
+import { QuestCreate, QuestMean, QuestSd, QuestQuantile, QuestUpdate, PAL_Gumbel } from "./Quest.js"
 
 export function test(){
     const math = require('mathjs');
@@ -27,11 +27,8 @@ export function test(){
     // Take the arithmetic mean of these two threshold (75%) estimates.
     var tmean = math.mean([t1, t2]);
     var sdmean = math.mean([sd1, sd2]);
-    
-    console.log(t1, sd1, t2, sd2, tmean, sdmean);
 
-    var intensities = gumbel_intensities(q1, q2, tmean);
-    return intensities; 
+    console.log(t1, sd1, t2, sd2, tmean, sdmean);
 }
 
 export function vis_quest( trialsDesired, tGuess_1, tGuessSd_1, tGuess_2, tGuessSd_2, pThreshold, beta, delta, gamma ){
@@ -124,12 +121,72 @@ export function vis_quest( trialsDesired, tGuess_1, tGuessSd_1, tGuess_2, tGuess
 //   the QUEST procedure.  t_mean is the arithmetic mean of the two threshold
 //   estimates produced by the two interleaved staircases.
 
-export function gumbel_intensities( q1, q2, tmean ){
-    
-    var intensities = [25, 50, 75, 90];
-    return intensities; 
+export function process_data( q1, q2 ) {
+    const math = require('mathjs');
 
-}
+    //Statistics
+    var t1 = QuestMean(q1);		// Recommended by Pelli (1989) and King-Smith et al. (1994) as the best way to ascertain threshold.
+    var sd1 = QuestSd(q1);
+
+    var t2 = QuestMean(q2);		// Recommended by Pelli (1989) and King-Smith et al. (1994) as the best way to ascertain threshold.
+    var sd2 = QuestSd(q2);
+
+    // Take the arithmetic mean of these two threshold (75%) estimates.
+    var tmean = math.mean([t1, t2]);
+    var sdmean = math.mean([sd1, sd2]);
+
+    var lambda = 0; // normally in config file//////////////////////
+    var gamma = 0.01; // normally in config file//////////////////////
+
+    var intensities = gumbel_intensities(q1, q2, tmean, lambda, gamma);
+
+    return intensities; 
+  }
+
+  export function gumbel_intensities(q1, q2, tmean, lambda, gamma){
+
+    var returnStruct = {
+        intensities: [],
+        parameters: [],
+        beta: 0,
+    }
+
+    var intensities = []
+    intensities.push( [ 25, 50, 75, 90 ] );
+    intensities.push( [] );
+
+    const math = require('mathjs');
+
+    //parameters(1,:) = ch_QuestBetaAnalysis(q_1);
+    //parameters(2,:) = ch_QuestBetaAnalysis(q_2);
+
+    var mean_beta = 3.5;  // changed 3/25/2019. Trying fixed beta at 3.5 (suggested generic beta value by Quest documentation) instead of individually estimating.
+    var mean_alpha = tmean;
+    var estimate_beta = math.mean(q1.beta, q2.beta);
+    returnStruct.beta = estimate_beta;
+
+    console.log(mean_alpha, mean_beta, gamma, lambda); 
+
+    var fzero = require("fzero");
+
+    var fn90 = function (x) { return( PAL_Gumbel(mean_alpha, mean_beta, gamma, lambda, x) - 0.90 ).toString(); };
+    var fn75 = function (x) { return( PAL_Gumbel(mean_alpha, mean_beta, gamma, lambda, x) - 0.75 ).toString(); };
+    var fn50 = function (x) { return( PAL_Gumbel(mean_alpha, mean_beta, gamma, lambda, x) - 0.50 ).toString(); };
+    var fn25 = function (x) { return ( PAL_Gumbel(mean_alpha, mean_beta, gamma, lambda, x) - 0.25).toString();  };
+
+    var zero = fzero(fn25, 2).solution;
+    //var zero = PAL_Gumbel(mean_alpha, mean_beta, gamma, lambda, 0);
+    intensities[1].push( parseFloat(fzero(fn25, 2).solution) );
+    intensities[1].push( parseFloat(fzero(fn50, 2).solution) );
+    intensities[1].push( parseFloat(fzero(fn75, 2).solution) );
+    intensities[1].push( parseFloat(fzero(fn90, 2).solution) );
+    intensities.push(intensities[1]);
+
+    returnStruct.intensities = intensities; 
+    console.log( returnStruct ); 
+
+    return returnStruct;
+  }
 
 export function ch_QuestBetaAnalysis( q ){
     
