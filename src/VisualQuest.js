@@ -1,4 +1,4 @@
-import { QuestCreate, QuestMean, QuestSd, QuestQuantile, QuestUpdate, PAL_Gumbel } from "./Quest.js"
+import { sumVector, QuestPdf, QuestRecompute, QuestCreate, QuestMean, QuestSd, QuestQuantile, QuestUpdate, PAL_Gumbel, indexOfMax } from "./Quest.js"
 
 export function test(){
     const math = require('mathjs');
@@ -157,8 +157,12 @@ export function process_data( q1, q2 ) {
 
     const math = require('mathjs');
 
-    //parameters(1,:) = ch_QuestBetaAnalysis(q_1);
-    //parameters(2,:) = ch_QuestBetaAnalysis(q_2);
+    var parameters = []; 
+
+    parameters.push(ch_QuestBetaAnalysis(q1));
+    parameters.push(ch_QuestBetaAnalysis(q2));
+    
+    returnStruct.parameters = parameters; 
 
     var mean_beta = 3.5;  // changed 3/25/2019. Trying fixed beta at 3.5 (suggested generic beta value by Quest documentation) instead of individually estimating.
     var mean_alpha = tmean;
@@ -190,32 +194,43 @@ export function process_data( q1, q2 ) {
 
 export function ch_QuestBetaAnalysis( q ){
     
-    console.log(q); 
-
     const math = require('mathjs');
 
     var q2 =  QuestCreate( q.tGuess, q.tGuessSd, q.pThreshold, math.eval("2^(1/4)"), q.delta, q.gamma, 0.02);
-
     q2.dim = 250; 
-    //var qq = QuestRecompute( q2 ); 
+    
+    var qq = QuestRecompute( q2 ); 
+    var p = sumVector(qq.pdf); 
 
-    console.log(q2); 
 
-    // var t2= QuestMean(q2); // estimate threshold for each possible beta
-    // var p2= QuestPdf(q2,t2); // get probability of each of these (threshold,beta) combinations
-    // var sd2= QuestSd(q2); // get sd of threshold for each possible beta
-    // var beta2 = q2.beta;
+    if( p == 0 ){
+        throw new Error("Beta has zero probability, ", p);
+    }
 
-    // console.log(t2, p2, sd2, beta2);
+    q2 = qq; 
 
-    // var p = Math.max(p2); 
-    // var index = indexOfMax(p2);
-    // var t = t2[index];
-    // var sd = QuestSd(q2);
-    // p = math.sum(p2);
-    // var betaMean = p2.map(function(x) {return x * beta2});
-    // betaMean = math.sum(betaMean);
-    // betaMean = betaMean / p;
+    var t2 = QuestMean( q2 ); // estimate threshold for each possible beta
+    var p2 = QuestPdf( q2, t2 ); // get probability of each of these (threshold,beta) combinations
+    var sd2 = QuestSd( q2 ); // get sd of threshold for each possible beta
+    var beta2 = q2.beta;
 
-    //var temp1 = p2.map(function(x) { return (math.pow( (x * beta2), 2) ) } );
+
+    var modeP = p2;
+    var t = t2; 
+    var sd = QuestSd(q2);
+    var betaMean = math.sum(p2 * beta2) / modeP;
+    var betaSd = math.sqrt(math.sum(p2 * math.pow(beta2, 2)) / modeP - math.pow((math.sum(p2 * beta2)/ modeP), 2)); 
+
+    var iBetaMean = math.sum( p2 / beta2) / modeP;
+    var iBetaSd = math.sqrt(math.sum(p2 / math.pow(beta2, 2)) / modeP - math.pow((math.sum(p2/beta2) / modeP), 2));
+    var betaEstimate = 1 / iBetaMean;
+
+    var returnStruct = {
+        t: t,
+        sd: sd, 
+        betaEstimate: betaEstimate, 
+        iBetaSd: iBetaSd, 
+    }
+
+    return returnStruct
 }

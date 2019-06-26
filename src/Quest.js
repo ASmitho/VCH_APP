@@ -432,6 +432,7 @@ export function QuestMode( q ){
 
 //sd=QuestSd(q)
 //Get the sd of the threshold distribution.
+
 export function QuestSd( q ){
     if( arguments.length != 1 ){
         throw new Error('Usage: sd=QuestSd(q)');
@@ -441,7 +442,7 @@ export function QuestSd( q ){
     var xSquared = q.x.map(function(x){return Math.pow(x, 2); }); 
     var Squared2 = sumVector( multiplyVector(q.pdf, q.x)) / p; ;
 
-    var sd= Math.sqrt( (sumVector(multiplyVector(q.pdf, xSquared)) / p) - Math.pow(Squared2, 2)) ; 
+    var sd = Math.sqrt( (sumVector(multiplyVector(q.pdf, xSquared)) / p) - Math.pow(Squared2, 2)) ; 
     return sd; 
 }
 //p=QuestPdf(q,t)
@@ -454,7 +455,7 @@ export function QuestPdf( q, t ){
 
     var i= Math.round( ( t- q.tGuess ) / q.grain ) + 1 + q.dim / 2;
     i = Math.min( q.pdf.length , Math.max( 1 , i ));
-    var p = q.pdf[i];
+    var p = q.pdf[i - 1];
     return p; 
 }
 

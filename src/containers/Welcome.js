@@ -44,9 +44,10 @@ class Welcome extends Component {
       gamma = 0.01,
       grain = 0.001,
       range = .05;
+      
     var q1 = QuestCreate(tGuess, tGuessSd, pThreshold, beta, delta, gamma, grain, range);
 
-    //console.log(q1); 
+    console.log(q1); 
     var q2 = QuestCreate(tGuess, tGuessSd, pThreshold, beta, delta, gamma, grain, range);
     q2.updatePdf = 1; 
     q2 = QuestUpdate(q2, 0.5, 1);

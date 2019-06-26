@@ -9,6 +9,7 @@ import TrialQ from "./containers/TrialQ";
 
 export default () =>
   <Switch>
+    <Route path="/users/:id"  exact component={Welcome} />
     <Route path="/" exact component={Welcome} />
     <Route path="/Welcome" exact component={Welcome} />
     <Route path="/Instructions" exact component={Instructions} />

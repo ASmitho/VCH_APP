@@ -3,6 +3,7 @@ import './Trial.css';
 import { Redirect } from "react-router-dom";
 import { createStim, createGabor } from "../Stim.js"
 import { QuestCreate, QuestRecompute, QuestTrials, QuestUpdate, QuestStimulate, QuestMean, QuestMode, QuestSd, QuestP, QuestPdf, QuestQuantile, PAL_Gumbel } from "../Quest.js"
+import { ch_QuestBetaAnalysis, process_data } from "../VisualQuest.js"
 
 import { connect } from 'react-redux'
 import { add_array, add_response_1, add_response_time_1, add_contrast_1 } from '../actions/data'
@@ -43,46 +44,6 @@ class TrialQ extends Component {
     }
     this.canvasRef = React.createRef();
     this.audioContext = new AudioContext();
-  }
-
-  process_data( q1, q2 ) {
-    const math = require('mathjs');
-
-    //Statistics
-    var t1 = QuestMean(q1);		// Recommended by Pelli (1989) and King-Smith et al. (1994) as the best way to ascertain threshold.
-    var sd1 = QuestSd(q1);
-
-    var t2 = QuestMean(q2);		// Recommended by Pelli (1989) and King-Smith et al. (1994) as the best way to ascertain threshold.
-    var sd2 = QuestSd(q2);
-
-    // Take the arithmetic mean of these two threshold (75%) estimates.
-    var tmean = math.mean([t1, t2]);
-    var sdmean = math.mean([sd1, sd2]);
-
-    var lambda = 0; // normally in config file//////////////////////
-    var gamma = 0.01; // normally in config file//////////////////////
-
-    var intensities = this.gumbel_intensities(q1, q2, tmean, lambda, gamma);
-
-    return intensities; 
-  }
-
-  gumbel_intensities(q1, q2, tmean, lambda, gamma){
-
-    var intensities = []
-    intensities.push( [ 25, 50, 75, 90 ] );
-
-    console.log(intensities);
-    const math = require('mathjs');
-
-    //parameters(1,:) = ch_QuestBetaAnalysis(q_1);
-    //parameters(2,:) = ch_QuestBetaAnalysis(q_2);
-
-    var mean_beta = 3.5;  // changed 3/25/2019. Trying fixed beta at 3.5 (suggested generic beta value by Quest documentation) instead of individually estimating.
-    var mean_alpha = tmean;
-    var estimate_beta = math.mean(q1.beta, q2.beta);
-    var beta = estimate_beta;
-
   }
 
   create_noise(audioContext) {
